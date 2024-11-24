@@ -19,32 +19,46 @@ public final class Algorithm {
     }
 
     private static Collection<Puzzle> getLongestSequence(Map<String, Puzzle> puzzleMap) {
+        Map<String, Collection<Puzzle>> cache = new HashMap<>();
         Collection<Puzzle> longest = new LinkedList<>();
 
-        for(var entry : puzzleMap.entrySet()) {
-            Map<String, Puzzle> mapCopy = new HashMap<>(puzzleMap);
-            Collection<Puzzle> buffer = createSequence(mapCopy, entry.getValue());
-
-            if(buffer.size() > longest.size()) {
-                longest = buffer;
+        for (var puzzle : puzzleMap.values()) {
+            Set<String> visited = new HashSet<>();
+            Collection<Puzzle> sequence = createSequence(puzzleMap, puzzle, cache, visited);
+            if (sequence.size() > longest.size()) {
+                longest = sequence;
             }
         }
 
         return longest;
     }
 
-    private static Collection<Puzzle> createSequence(Map<String, Puzzle> puzzleMap, Puzzle puzzle) {
-        if(!puzzleMap.containsKey(puzzle.getEndNum())) {
-            return List.of(puzzle);
+    private static Collection<Puzzle> createSequence(
+            Map<String, Puzzle> puzzleMap,
+            Puzzle puzzle,
+            Map<String, Collection<Puzzle>> cache,
+            Set<String> visited
+    ) {
+        if (cache.containsKey(puzzle.getStartNum())) {
+            return cache.get(puzzle.getStartNum());
         }
 
-        Puzzle nextPuzzle = puzzleMap.get(puzzle.getEndNum());
-        List<Puzzle> subSequence = new LinkedList<>();
+        if (visited.contains(puzzle.toString())) {
+            return List.of();
+        }
 
-        puzzleMap.remove(nextPuzzle.getStartNum());
-        subSequence.add(puzzle);
-        subSequence.addAll(createSequence(puzzleMap, nextPuzzle));
+        visited.add(puzzle.toString());
 
-        return subSequence;
+        List<Puzzle> sequence = new LinkedList<>();
+        sequence.add(puzzle);
+
+        String nextKey = puzzle.getEndNum();
+        if (puzzleMap.containsKey(nextKey)) {
+            Puzzle nextPuzzle = puzzleMap.get(nextKey);
+            sequence.addAll(createSequence(puzzleMap, nextPuzzle, cache, visited));
+        }
+
+        cache.put(puzzle.getStartNum(), sequence);
+        return sequence;
     }
 }

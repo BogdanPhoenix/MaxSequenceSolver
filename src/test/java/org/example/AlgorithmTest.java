@@ -20,7 +20,8 @@ class AlgorithmTest {
     private static Stream<Arguments> testSourceGetLargestDigitalPuzzle() {
         return Stream.of(
                 Arguments.of(List.of(), ""),
-                Arguments.of(List.of("608017", "248460", "962282", "994725", "177092"), "24846080177092")
+                Arguments.of(List.of("608017", "248460", "962282", "994725", "177092"), "24846080177092"),
+                Arguments.of(List.of("001748", "330541", "942517", "335401", "174800", "485500"), "942517480017485500")
         );
     }
 }

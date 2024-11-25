@@ -5,7 +5,7 @@ import lombok.NonNull;
 import java.util.*;
 
 public class AlgorithmDFS {
-    private static Map<String, List<String>> puzzleMap;
+    private static Map<String, List<String>> puzzleMap = new HashMap<>();
 
     private AlgorithmDFS() {}
 
@@ -16,7 +16,7 @@ public class AlgorithmDFS {
     }
 
     private static void createPuzzleMap(@NonNull Collection<String> numbers) {
-        puzzleMap = new HashMap<>();
+        puzzleMap.clear();
 
         for (String num : numbers) {
             String endKey = num.substring(num.length() - 2);
@@ -36,7 +36,7 @@ public class AlgorithmDFS {
         List<String> longestPath = new ArrayList<>();
 
         for (String node : puzzleMap.keySet()) {
-            List<String> candidatePath = dfs(node, new HashSet<>(), new ArrayList<>());
+            List<String> candidatePath = dfs(node, new HashSet<>(), new ArrayDeque<>());
             if (candidatePath.size() > longestPath.size()) {
                 longestPath = candidatePath;
             }
@@ -45,9 +45,9 @@ public class AlgorithmDFS {
         return longestPath;
     }
 
-    private static List<String> dfs(String node, Set<String> visited, List<String> path) {
+    private static List<String> dfs(String node, Set<String> visited, Deque<String> path) {
         visited.add(node);
-        path.add(node);
+        path.addLast(node);
 
         List<String> maxPath = new ArrayList<>(path);
         for (String neighbor : puzzleMap.get(node)) {

@@ -3,59 +3,55 @@ package org.example;
 import lombok.NonNull;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AlgorithmDFS {
-    private static Map<String, List<String>> puzzleMap = new HashMap<>();
+    private static final Map<Puzzle, List<Puzzle>> PUZZLES_MAP = new HashMap<>();
 
     private AlgorithmDFS() {}
 
     public static String getLargestDigitalPuzzle(Collection<String> numbers) {
-        createPuzzleMap(numbers);
-        var result = findLongestPathWithLogs();
-        return convertListToString(result);
+        List<Puzzle> puzzles = numbers.stream()
+                .map(Puzzle::new)
+                .toList();
+
+        createPuzzleMap(puzzles);
+        var result = findLongestPathParallel();
+        return Puzzle.concatPuzzles(result);
     }
 
-    private static void createPuzzleMap(@NonNull Collection<String> numbers) {
-        puzzleMap.clear();
+    private static void createPuzzleMap(@NonNull Collection<Puzzle> puzzles) {
+        PUZZLES_MAP.clear();
 
-        for (String num : numbers) {
-            String endKey = num.substring(num.length() - 2);
-            puzzleMap.putIfAbsent(num, new ArrayList<>());
-            for (String otherNum : numbers) {
-                if (!num.equals(otherNum)) {
-                    String otherStartKey = otherNum.substring(0, 2);
-                    if (endKey.equals(otherStartKey)) {
-                        puzzleMap.get(num).add(otherNum);
-                    }
-                }
-            }
+        Map<String, List<Puzzle>> startIndex = new HashMap<>();
+        for (Puzzle puzzle : puzzles) {
+            startIndex.computeIfAbsent(puzzle.getStartNum(), k -> new ArrayList<>()).add(puzzle);
+        }
+
+        for (Puzzle puzzle : puzzles) {
+            List<Puzzle> matchingPuzzles = startIndex.getOrDefault(puzzle.getEndNum(), Collections.emptyList());
+            PUZZLES_MAP.put(puzzle, new ArrayList<>(matchingPuzzles));
         }
     }
 
-    private static List<String> findLongestPathWithLogs() {
-        List<String> longestPath = new ArrayList<>();
-
-        for (String node : puzzleMap.keySet()) {
-            List<String> candidatePath = dfs(node, new HashSet<>(), new ArrayDeque<>());
-            if (candidatePath.size() > longestPath.size()) {
-                longestPath = candidatePath;
-            }
-        }
-
-        return longestPath;
+    private static List<Puzzle> findLongestPathParallel() {
+        return PUZZLES_MAP.keySet().parallelStream()
+                .map(node -> dfs(node, new HashSet<>(), new ArrayDeque<>()))
+                .max(Comparator.comparingInt(List::size))
+                .orElseGet(ArrayList::new);
     }
 
-    private static List<String> dfs(String node, Set<String> visited, Deque<String> path) {
+    private static List<Puzzle> dfs(Puzzle node, Set<Puzzle> visited, Deque<Puzzle> path) {
         visited.add(node);
         path.addLast(node);
 
-        List<String> maxPath = new ArrayList<>(path);
-        for (String neighbor : puzzleMap.get(node)) {
+        List<Puzzle> maxPath = new ArrayList<>(path);
+        for (Puzzle neighbor : PUZZLES_MAP.get(node)) {
             if (visited.contains(neighbor)) {
                 continue;
             }
 
-            List<String> candidatePath = dfs(neighbor, visited, path);
+            List<Puzzle> candidatePath = dfs(neighbor, visited, path);
             if (candidatePath.size() > maxPath.size()) {
                 maxPath = candidatePath;
             }
@@ -64,20 +60,5 @@ public class AlgorithmDFS {
         path.removeLast();
         visited.remove(node);
         return maxPath;
-    }
-
-    private static String convertListToString(List<String> list) {
-        StringBuilder builder = new StringBuilder();
-
-        for(int i = 0; i < list.size(); i++) {
-            if(i == 0) {
-                builder.append(list.get(i));
-                continue;
-            }
-
-            builder.append(list.get(i).substring(2));
-        }
-
-        return builder.toString();
     }
 }

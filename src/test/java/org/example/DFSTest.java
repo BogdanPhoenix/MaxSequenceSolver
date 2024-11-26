@@ -4,17 +4,29 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AlgorithmTest {
+class DFSTest {
+    private static final List<Class<? extends DFS>> CLASS_LIST = List.of(RecursionDFS.class, IterativeDFS.class);
+    private static final String MESSAGE = "Status: “Failed”. Class: \"%s\". Collection: \"%s\".";
+
     @ParameterizedTest
     @MethodSource("testSourceGetLargestDigitalPuzzle")
-    void testGetLargestDigitalPuzzle(List<String> input, String expected) {
-        String actual = Algorithm.getLargestDigitalPuzzle(input);
-        assertEquals(expected, actual);
+    void testGetLargestDigitalPuzzle(List<String> input, String expected) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        for (var clazz : CLASS_LIST) {
+            Constructor<? extends DFS> constructor = clazz.getDeclaredConstructor();
+            DFS myClassInstance = constructor.newInstance();
+
+            List<Puzzle> puzzles = myClassInstance.getLargestDigitalPuzzle(input);
+            String actual = Puzzle.concatPuzzles(puzzles);
+
+            assertEquals(expected, actual, String.format(MESSAGE, clazz.getSimpleName(), input));
+        }
     }
 
     private static Stream<Arguments> testSourceGetLargestDigitalPuzzle() {

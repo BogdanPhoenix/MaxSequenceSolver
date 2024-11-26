@@ -7,6 +7,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Represents a puzzle constructed from a string of digits, split into three parts:
+ * start, middle, and end. Provides utilities for validation, splitting, and concatenation of puzzles.
+ */
 public final class Puzzle {
     private static final String REGX_SPLIT_NUM = "(.{2})(.*)(.{2})";
     private static final int MIN_LENGTH_NUM = 4;
@@ -18,6 +22,13 @@ public final class Puzzle {
     @Getter
     private final String endNum;
 
+    /**
+     * Concatenates a sequence of puzzles into a single string if they form a valid sequence.
+     *
+     * @param puzzles a collection of Puzzle objects to concatenate.
+     * @return a concatenated string representation of the puzzles.
+     * @throws IllegalArgumentException if the puzzles do not form a valid sequence.
+     */
     public static String concatPuzzles(@NonNull Collection<Puzzle> puzzles) throws IllegalArgumentException {
         if(puzzles.isEmpty()) {
             return "";
@@ -40,7 +51,7 @@ public final class Puzzle {
             }
 
             if(!previousPuzzle.endNum.equals(currentPuzzle.startNum)) {
-                throw new IllegalArgumentException(String.format(CONCAT_EXCEPTION_MESSAGE, previousPuzzle.endNum, currentPuzzle.startNum));
+                throw new IllegalArgumentException(String.format(CONCAT_EXCEPTION_MESSAGE, previousPuzzle, currentPuzzle));
             }
 
             result.append(currentPuzzle.middenNum).append(currentPuzzle.endNum);
@@ -52,6 +63,13 @@ public final class Puzzle {
         return result.toString();
     }
 
+    /**
+     * Constructs a Puzzle object by splitting a valid number string into start, middle, and end parts.
+     *
+     * @param number a string representing a number to create the Puzzle from.
+     * @throws NullPointerException if the number is null.
+     * @throws IllegalArgumentException if the number is invalid.
+     */
     public Puzzle(String number) throws NullPointerException, IllegalArgumentException {
         checkNumber(number);
 
@@ -62,6 +80,12 @@ public final class Puzzle {
         endNum = groups.poll();
     }
 
+    /**
+     * Validates the input number string for proper length and format.
+     *
+     * @param number the number string to validate.
+     * @throws IllegalArgumentException if the number is blank, too short, or contains non-digit characters.
+     */
     private void checkNumber(@NonNull String number) throws NullPointerException, IllegalArgumentException {
         if(number.isBlank()) {
             throw new IllegalArgumentException("Number cannot be blank");
@@ -72,11 +96,24 @@ public final class Puzzle {
         }
     }
 
+    /**
+     * Checks if the given string contains only digit characters.
+     *
+     * @param number the number string to check.
+     * @return true if the string contains only digits, false otherwise.
+     */
     private boolean isOnlyDigits(String number) {
         return number.chars()
                 .allMatch(Character::isDigit);
     }
 
+    /**
+     * Splits a valid number string into three parts: start, middle, and end.
+     *
+     * @param number the number string to split.
+     * @return a queue containing the split parts in order.
+     * @throws IllegalArgumentException if the string does not match the expected format.
+     */
     private Queue<String> splitNumber(String number) {
         Queue<String> splitNumber = new LinkedList<>();
 
@@ -94,12 +131,14 @@ public final class Puzzle {
         return splitNumber;
     }
 
+    /**
+     * Checks if the current puzzle can be followed by another puzzle to form a sequence.
+     *
+     * @param puzzle the puzzle to check for sequence continuity.
+     * @return true if the current puzzle's end matches the given puzzle's start, false otherwise.
+     */
     public boolean isNext(Puzzle puzzle) {
         return this.endNum.equals(puzzle.startNum);
-    }
-
-    public long getLong() {
-        return Long.parseLong(this.toString());
     }
 
     @Override

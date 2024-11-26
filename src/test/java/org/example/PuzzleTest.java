@@ -35,21 +35,20 @@ class PuzzleTest {
 
     @ParameterizedTest
     @MethodSource("testSourceToSuccessCreatePuzzle")
-    void testCreateSuccess(String input, String expectedString, long expectedLong) {
+    void testCreateSuccess(String input, String expectedString) {
         Puzzle test = new Puzzle(input);
         assertEquals(expectedString, test.toString());
-        assertEquals(expectedLong, test.getLong());
     }
 
     private static Stream<Arguments> testSourceToSuccessCreatePuzzle() {
         return Stream.of(
-                Arguments.of("248460", "248460", 248460),
-                Arguments.of("608017", "608017", 608017),
-                Arguments.of("962282", "962282", 962282),
-                Arguments.of("994725", "994725", 994725),
-                Arguments.of("177092", "177092", 177092),
-                Arguments.of("077092", "077092", 77092),
-                Arguments.of("7709", "7709", 7709)
+                Arguments.of("248460", "248460"),
+                Arguments.of("608017", "608017"),
+                Arguments.of("962282", "962282"),
+                Arguments.of("994725", "994725"),
+                Arguments.of("177092", "177092"),
+                Arguments.of("077092", "077092"),
+                Arguments.of("7709", "7709")
         );
     }
 

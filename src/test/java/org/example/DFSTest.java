@@ -4,18 +4,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DFSTest {
-    private static final DFS algorithm = new RecursionDFS();
-
     @ParameterizedTest
     @MethodSource("testSourceGetLargestDigitalPuzzle")
     void testGetLargestDigitalPuzzle(List<String> input, String expected) {
-        List<Puzzle> puzzles = algorithm.getLargestDigitalPuzzle(input);
+        Collection<Puzzle> puzzles = DFS.getLargestDigitalPuzzle(input);
         String actual = Puzzle.concatPuzzles(puzzles);
 
         assertEquals(expected, actual);

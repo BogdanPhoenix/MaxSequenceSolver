@@ -22,10 +22,9 @@ public class App {
 
             try {
                 List<String> data = getData(path);
-                DFS dfs = new RecursionDFS();
 
                 System.out.println("Starts the calculation. Please wait a moment...\n");
-                List<Puzzle> result = dfs.getLargestDigitalPuzzle(data);
+                Collection<Puzzle> result = DFS2.getLargestDigitalPuzzle(data);
                 System.out.printf("The result: %s.%n%n", Puzzle.concatPuzzles(result));
             } catch (RuntimeException e) {
                 System.out.println(e.getMessage());

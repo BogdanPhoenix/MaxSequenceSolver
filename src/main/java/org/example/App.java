@@ -24,7 +24,7 @@ public class App {
                 List<String> data = getData(path);
 
                 System.out.println("Starts the calculation. Please wait a moment...\n");
-                Collection<Puzzle> result = DFS2.getLargestDigitalPuzzle(data);
+                Collection<Puzzle> result = DFS.getLargestDigitalPuzzle(data);
                 System.out.printf("The result: %s.%n%n", Puzzle.concatPuzzles(result));
             } catch (RuntimeException e) {
                 System.out.println(e.getMessage());

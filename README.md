@@ -13,3 +13,7 @@ By analyzing the ending parts, we can form the following chain:
 248460 & 608017 & 177092 -> 2484(**60**)80(**17**)7092
 
 Thus, the largest sequence and the answer will be: **24846080177092**.
+
+## Acknowledgement:
+
+I want to thank my friend [Yurii](https://github.com/yarbshk) for his expert opinion and advice regarding my code.

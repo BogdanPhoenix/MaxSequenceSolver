@@ -12,11 +12,11 @@ public class Data {
     private static final String EXTENSION = ".txt";
     private Data() {}
 
-    public static List<String> getDataFromTXT(@NonNull String fileName) throws IOException {
+    public static List<String> getDataFromTXT(@NonNull String fileName) throws IOException, IllegalArgumentException {
         if(fileName.isBlank()) {
-            throw new IOException("File name cannot be blank");
+            throw new IllegalArgumentException("File name cannot be blank");
         } else if(!fileName.endsWith(EXTENSION)) {
-            throw new IOException("The file you provided has an unsupported extension");
+            throw new IllegalArgumentException("The file you provided has an unsupported extension");
         }
 
         Path path = Paths.get(fileName);

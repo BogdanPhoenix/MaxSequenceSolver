@@ -3,14 +3,15 @@ package org.example;
 import lombok.NonNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The DFS (Depth-First Search) class is responsible for finding the largest digital puzzle path
  * from a collection of number strings by creating puzzles and exploring possible connections between them.
  */
 public final class DFS {
-    private static final Map<String, Deque<Puzzle>> PUZZLE_MAP = new HashMap<>();
-    private static final Map<String, Deque<Puzzle>> CACHE = new HashMap<>();
+    private static final Map<Puzzle, List<Puzzle>> PUZZLE_MAP = new HashMap<>();
+    private static final Map<Puzzle, Deque<Puzzle>> CACHE = new HashMap<>();
 
     private DFS() {}
 
@@ -19,7 +20,7 @@ public final class DFS {
      * and finds the largest digital puzzle path.
      *
      * @param numbers a collection of string representations of numbers.
-     * @return a list of puzzles representing the longest path. If the input is null or empty, returns an empty list.
+     * @return a collection of puzzles representing the longest path. If the input is null or empty, returns an empty list.
      */
     public static Collection<Puzzle> getLargestDigitalPuzzle(Collection<String> numbers) {
         if (numbers == null || numbers.isEmpty()) {
@@ -43,15 +44,18 @@ public final class DFS {
     private static void createPuzzleMap(@NonNull Collection<Puzzle> puzzles) {
         PUZZLE_MAP.clear();
 
-        for (var puzzle : puzzles) {
-            if(PUZZLE_MAP.containsKey(puzzle.getStartNum())) {
-                PUZZLE_MAP.get(puzzle.getStartNum()).add(puzzle);
-            } else {
-                Deque<Puzzle> newPuzzles = new LinkedList<>();
-                newPuzzles.add(puzzle);
-                PUZZLE_MAP.put(puzzle.getStartNum(), newPuzzles);
-            }
-        }
+        Map<String, List<Puzzle>> startIndex = puzzles.stream()
+                .collect(Collectors.groupingBy(
+                        Puzzle::getStartNum,
+                        Collectors.toList()
+                ));
+
+        puzzles.forEach(puzzle ->
+                PUZZLE_MAP.put(
+                        puzzle,
+                        startIndex.getOrDefault(puzzle.getEndNum(), Collections.emptyList())
+                )
+        );
     }
 
     /**
@@ -61,7 +65,7 @@ public final class DFS {
      */
     private static Deque<Puzzle> findLongestPath() {
         return PUZZLE_MAP.keySet().stream()
-                .map(startNode -> dfsRecursion(startNode, new HashSet<>(), new ArrayDeque<>()))
+                .map(node -> dfsRecursion(node, new HashSet<>(), new ArrayDeque<>()))
                 .max(Comparator.comparingInt(Deque::size))
                 .orElseGet(LinkedList::new);
     }
@@ -69,37 +73,34 @@ public final class DFS {
     /**
      * Performs a depth-first search (DFS) recursion to find the longest puzzle path starting from a given key.
      *
-     * @param key the starting number of the puzzle path.
+     * @param node the starting number of the puzzle path.
      * @param visited a set of visited puzzles to avoid revisiting them.
      * @param path the current path being explored.
      * @return a deque representing the longest path found.
      */
-    private static Deque<Puzzle> dfsRecursion(String key, Set<Puzzle> visited, Deque<Puzzle> path) {
-        if (CACHE.containsKey(key)) {
-            return mergeCachedPath(key, path);
+    private static Deque<Puzzle> dfsRecursion(Puzzle node, Set<Puzzle> visited, Deque<Puzzle> path) {
+        if (CACHE.containsKey(node)) {
+            return mergeCachedPath(node, path);
         }
 
-        if (!PUZZLE_MAP.containsKey(key)) {
-            return new LinkedList<>(path);
-        }
+        visited.add(node);
+        path.addLast(node);
 
         Deque<Puzzle> maxPath = new LinkedList<>(path);
 
-        for (Puzzle puzzle : PUZZLE_MAP.get(key)) {
-            if (!visited.add(puzzle)) {
+        for (Puzzle neighbor : PUZZLE_MAP.getOrDefault(node, List.of())) {
+            if (visited.contains(neighbor)) {
                 continue;
             }
 
-            path.addLast(puzzle);
-
-            Deque<Puzzle> candidatePath = dfsRecursion(puzzle.getEndNum(), visited, path);
+            Deque<Puzzle> candidatePath = dfsRecursion(neighbor, visited, path);
             if (candidatePath.size() > maxPath.size()) {
                 maxPath = candidatePath;
             }
-
-            path.removeLast();
-            visited.remove(puzzle);
         }
+
+        path.removeLast();
+        visited.remove(node);
 
         cachePath(maxPath);
         return maxPath;
@@ -108,22 +109,22 @@ public final class DFS {
     /**
      * Merges a cached path with the current path to form a longer path.
      *
-     * @param key the starting number of the puzzle.
+     * @param node the starting number of the puzzle.
      * @param currentPath the current puzzle path being explored.
      * @return a merged path that combines the current path with the cached path.
      */
-    private static Deque<Puzzle> mergeCachedPath(String key, Deque<Puzzle> currentPath) {
-        List<Puzzle> cachedPath = new ArrayList<>(CACHE.get(key));
+    private static Deque<Puzzle> mergeCachedPath(Puzzle node, Deque<Puzzle> currentPath) {
+        Deque<Puzzle> cachedPath = CACHE.get(node);
+        Set<Puzzle> visited = new HashSet<>(currentPath);
         Deque<Puzzle> mergedPath = new LinkedList<>(currentPath);
 
-        Set<Puzzle> visited = new HashSet<>(mergedPath);
-        Puzzle lastPuzzle = mergedPath.isEmpty() ? null : mergedPath.getLast();
+        Puzzle lastPuzzleInPath = mergedPath.getLast();
 
         for (Puzzle puzzle : cachedPath) {
-            if (isAdd(visited, puzzle, lastPuzzle)) {
-                mergedPath.addLast(puzzle);
+            if (isAdd(visited, puzzle, lastPuzzleInPath)) {
+                mergedPath.add(puzzle);
                 visited.add(puzzle);
-                lastPuzzle = puzzle;
+                lastPuzzleInPath = puzzle;
             }
         }
 
@@ -139,7 +140,7 @@ public final class DFS {
      * @return true if the puzzle can be added, false otherwise.
      */
     private static boolean isAdd(Set<Puzzle> visited, Puzzle currentPuzzle, Puzzle lastPuzzle) {
-        return !visited.contains(currentPuzzle) && (lastPuzzle == null || lastPuzzle.isNext(currentPuzzle));
+        return !visited.contains(currentPuzzle) && lastPuzzle.isNext(currentPuzzle);
     }
 
     /**
@@ -152,9 +153,9 @@ public final class DFS {
             return;
         }
 
-        Puzzle firstPuzzle = path.peekFirst();
-        CACHE.merge(firstPuzzle.getStartNum(), new LinkedList<>(path),
-                (existingPath, newPath) -> newPath.size() > existingPath.size() ? newPath : existingPath
+        Puzzle firstElement = path.getFirst();
+        CACHE.merge(firstElement, path, (existing, newPath) ->
+                newPath.size() > existing.size() ? new LinkedList<>(newPath) : existing
         );
     }
 }
